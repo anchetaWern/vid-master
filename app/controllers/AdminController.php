@@ -64,6 +64,23 @@ class AdminController extends BaseController {
 	}
 
 
+	public function websites(){
+
+		$user_id = Auth::user()->id;
+
+		$websites = Website::where('user_id', '=', $user_id)->get();
+
+		$page_data = array(
+			'websites' => $websites,
+			'website_count' => count($websites),
+			'base_url' => Config::get('keys.base_url')
+		);
+
+		$this->layout->title = 'Websites';
+		$this->layout->content = View::make('admin.websites', $page_data);
+	}
+
+
 	public function logout(){
 
         Session::flush();
