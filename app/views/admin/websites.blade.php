@@ -14,6 +14,7 @@
 		      <th>Type</th>
 		      <th>URL</th>
 		      <th>Public</th>
+		      <th>Edit</th>
 		    </tr>
 		  </thead>
 		  <tbody>
@@ -35,6 +36,7 @@
 		  		}
 		  		?>
 		  		<td>{{ $public }}</td>
+		  		<td><a href="/websites/{{ $w->id }}">edit</a></td>
 		    </tr>
 		   @endforeach
 		  </tbody>

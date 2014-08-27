@@ -13,7 +13,7 @@
     <link href="{{ asset('assets/lib/bootstrap/bootstrap.css') }}" rel="stylesheet">   
     <link href="{{ asset('assets/css/jumbotron-narrow.css') }}" rel="stylesheet">
 
-    @if(!empty($new_website))
+    @if(!empty($switch))
     <link rel="stylesheet" href="{{ asset('assets/lib/bootstrap-switch/bootstrap-switch.css') }}">
     @endif
 
@@ -40,9 +40,9 @@
 	<script src="{{ asset('assets/js/jquery.js') }}"></script>
 	<script src="{{ asset('assets/lib/bootstrap/bootstrap.js') }}"></script>
   
-  @if(!empty($new_website))
+  @if(!empty($switch))
   <script src="{{ asset('assets/lib/bootstrap-switch/bootstrap-switch.js') }}"></script>
-  <script src="{{ asset('assets/js/new-website.js') }}"></script>
+  <script src="{{ asset('assets/js/switch.js') }}"></script>
   @endif
 
   </body>

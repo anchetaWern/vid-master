@@ -37,4 +37,6 @@ Route::group(array('before' => 'auth', 'after' => 'nocache'), function()
 	Route::post('/websites', 'AdminController@createWebsite');
 
 	Route::get('/websites', 'AdminController@websites');
+	Route::get('/websites/{id}', 'AdminController@editWebsite');
+	Route::post('/websites/{id}', 'AdminController@doEditWebsite');
 });
