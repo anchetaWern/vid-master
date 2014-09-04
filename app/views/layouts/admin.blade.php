@@ -12,6 +12,8 @@
 
     <link href="{{ asset('assets/lib/bootstrap/bootstrap.css') }}" rel="stylesheet">   
     <link href="{{ asset('assets/css/jumbotron-narrow.css') }}" rel="stylesheet">
+  
+    <link rel="stylesheet" href="{{ asset('assets/lib/font-awesome/css/font-awesome.css') }}">
 
     @if(!empty($switch))
     <link rel="stylesheet" href="{{ asset('assets/lib/bootstrap-switch/bootstrap-switch.css') }}">

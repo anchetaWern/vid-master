@@ -21,3 +21,12 @@
     display: none;
     text-align: center;
 }
+
+a.action-link {
+	color: gray;
+    cursor: pointer;
+}
+
+a.action-link.featured {
+    color: orange;
+}

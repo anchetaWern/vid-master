@@ -44,6 +44,41 @@ Route::group(array('before' => 'auth', 'after' => 'nocache'), function()
 	Route::get('/websites/{id}', 'AdminController@editWebsite');
 	Route::post('/websites/{id}', 'AdminController@doEditWebsite');
 
+	Route::post('/video/featured', 'AdminController@setFeaturedVideo');
+});
+
+Route::get('/get/featured', function(){
+	$videosearch_params = array(
+			'index' => 'video-websites',
+			'type' => 'video'
+		);
+
+	$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = 'PLEsfXFp6DpzRFiPsPIDX1S5CYeJV7c9N9';
+	$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['user_id'] = 1;
+	$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['featured'] = 'featured';
+
+	$videosearch_response = Es::search($videosearch_params);
+
+	$update_params = array(
+		'index' => 'video-websites',
+		'type' => 'video'
+	);
+	
+	/*
+	foreach($videosearch_response['hits']['hits'] as $hit){
+		
+		$update_params['id'] = $hit['_id'];
+		$source = $hit['_source'];
+		$source['featured'] = '';
+		$update_params['body']['doc'] = $source; 
+		$res = Es::update($update_params);
+		print_r($res);
+
+	}
+	*/
+	
+	return $videosearch_response;
+
 });
 
 Route::get('/tester', function(){
@@ -214,4 +249,25 @@ Route::get('/es/search', function(){
     $searchParams['body']['query']['match']['title'] = 'django';
     $queryResponse = Es::search($searchParams);
     return $queryResponse;
+});
+
+Route::get('/vimeo', function(){
+	/*
+	$app_id = Config::get('keys.vimeo.app_id');
+	$app_secret = Config::get('keys.vimeo.app_secret');
+	//$access_token = Config::get('keys.access_token');
+	$access_token = 'c3f3efee6f38253e8e44a125aefbf39c'; //app only
+
+	//$vimeo = new Vimeo\Vimeo($app_id, $app_secret, $access_token);
+	$vimeo = new Vimeo\Vimeo($app_id, $app_secret);
+
+	//$token_response = $vimeo->clientCredentials();
+	$res = $vimeo->request('/api/v2/fronttrends/channels.json');
+	return $res;
+	*/
+
+	$username = 'fronttrends';
+	$client = new GuzzleHttp\Client();
+	$res = $client->get("http://vimeo.com/api/v2/{$username}/info.json");
+	return $res->getBody(); 
 });

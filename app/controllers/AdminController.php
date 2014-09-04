@@ -254,6 +254,73 @@ class AdminController extends BaseController {
 	}
 
 
+	public function setFeaturedVideo(){
+
+		$id = Input::get('id');
+		$playlist_id = Input::get('playlist_id');
+		$status = Input::get('status');
+
+		$featured = 'featured';
+		if(!empty($status)){
+			$featured = '';
+		}	
+
+		$user_id = Auth::user()->id;
+
+		//unset all currently featured videos
+		$videosearch_params = array(
+				'index' => 'video-websites',
+				'type' => 'video'
+			);
+
+		$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = $playlist_id;
+		$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['user_id'] = $user_id;
+		$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['featured'] = 'featured';
+
+		$videosearch_response = Es::search($videosearch_params);
+
+		$update_params = array(
+			'index' => 'video-websites',
+			'type' => 'video'
+		);
+		
+		
+		foreach($videosearch_response['hits']['hits'] as $hit){
+			
+			$update_params['id'] = $hit['_id'];
+			$source = $hit['_source'];
+			$source['featured'] = '';
+			$update_params['body']['doc'] = $source; 
+			$res = Es::update($update_params);
+
+		}
+	
+
+		$get_params = array(
+			'index' => 'video-websites',
+			'type' => 'video',
+			'id' => $id
+		);
+
+		$video = Es::get($get_params);
+
+		$source = $video['_source'];
+		$source['featured'] = $featured;
+
+		$update_params = array(
+			'index' => 'video-websites',
+			'type' => 'video',
+			'id' => $id,
+			'body' => array(
+				'doc' => $source
+			)
+		);
+
+		$response = Es::update($update_params);
+		return $response;
+	}
+
+
 	public function logout(){
 
         Session::flush();

@@ -37,7 +37,7 @@ function loadPlaylistItems(id, from){
 			}else{
 				$('.load-more-container').hide();
 			}
-			
+
 		}
 	);
 
@@ -70,4 +70,34 @@ $('#videos').on('click', '.load-more', function(e){
 	var from = self.data('from') + 10;
 
 	loadPlaylistItems(id, from);
+});
+
+
+$('#videos').on('click', '.action-link', function(e){
+
+	e.preventDefault();
+
+	var self = $(this);
+
+	
+	var id = self.data('id');
+	var playlist_id = self.data('playlistid');
+	var status = self.data('featured');
+	$('#videos .action-link.featured').removeClass('featured').data('featured', '');
+
+	
+
+	$.post(
+		'/video/featured',
+		{
+			'id': id,
+			'playlist_id': playlist_id,
+			'status': status
+		},
+		function(response){
+			if(!status){
+				self.addClass('featured').data('featured', 'featured');
+			}
+		}
+	);
 });
