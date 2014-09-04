@@ -1,0 +1,23 @@
+.pl-image {
+    width: 200px;
+    float: left;
+    margin-right: 10px;
+}
+
+.pl-container {
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.tab-item {
+    margin-top: 20px;
+}
+
+.pl-image.selected {
+    border: 5px solid orange;
+}
+
+.load-more-container {
+    display: none;
+    text-align: center;
+}

@@ -83,4 +83,27 @@ class HomeController extends BaseController {
 		}
 
 	}
+
+
+	public function playlistVideos(){
+
+		$id = Input::get('id');
+		$from = Input::get('from');
+	
+		$videosearch_params = array(
+			'index' => 'video-websites',
+			'type' => 'video'
+		);
+
+		$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = $id;
+		$videosearch_params['body']['sort']['position']['order'] = 'asc';
+		$videosearch_params['from'] = $from;
+
+		$videosearch_response = Es::search($videosearch_params);
+
+		return $videosearch_response;
+
+	}
+
+
 }

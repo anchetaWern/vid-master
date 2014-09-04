@@ -17,6 +17,10 @@
     <link rel="stylesheet" href="{{ asset('assets/lib/bootstrap-switch/bootstrap-switch.css') }}">
     @endif
 
+    @if(!empty($edit_website))
+    <link rel="stylesheet" href="{{ asset('assets/css/edit-website.css') }}">
+    @endif
+
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -43,6 +47,11 @@
   @if(!empty($switch))
   <script src="{{ asset('assets/lib/bootstrap-switch/bootstrap-switch.js') }}"></script>
   <script src="{{ asset('assets/js/switch.js') }}"></script>
+  @endif
+
+  @if(!empty($edit_website))
+  <script src="{{ asset('assets/js/handlebars.js') }}"></script>
+  <script src="{{ asset('assets/js/edit-website.js') }}"></script>
   @endif
 
   </body>

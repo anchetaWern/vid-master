@@ -182,9 +182,20 @@ class AdminController extends BaseController {
 			->where('id', '=', $id)
 			->first();
 
+		$playlistsearch_params = array(
+			'index' => 'video-websites',
+			'type' => 'playlist'
+		);
+
+		$playlistsearch_params['body']['query']['match']['website_id'] = $id;
+		$playlistsearch_response = Es::search($playlistsearch_params);
+
+		$playlists = (!empty($playlistsearch_response['hits']['hits'])) ? $playlistsearch_response['hits']['hits'] : array(); 
 
 		$page_data = array(
-			'website' => $website
+			'website' => $website,
+			'playlists' => $playlistsearch_response,
+			'playlist_count' => count($playlists)
 		);
 
 		$this->layout->title = 'Edit Website';
