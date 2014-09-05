@@ -116,7 +116,7 @@ class AdminController extends BaseController {
 									'title' => $pl->snippet->title,
 									'playlist_type' => 'youtube',
 									'description' => $pl->snippet->description,
-									'thumbnail' => $pl->snippet->thumbnails->default->url,
+									'thumbnail' => $pl->snippet->thumbnails->high->url,
 									'published_at' => $pl->snippet->publishedAt
 								);
 								$playlist_params['index'] = 'video-websites';
@@ -149,7 +149,11 @@ class AdminController extends BaseController {
 													'position' => $video->snippet->position,
 													'title' => $video->snippet->title,
 													'description' => $video->snippet->description,
-													'thumbnail' => $video->snippet->thumbnails->default->url,
+													'thumbnails' => array(
+														'small' => $video->snippet->thumbnails->default->url,
+														'medium' => $video->snippet->thumbnails->medium->url,
+														'large' => $video->snippet->thumbnails->high->url
+													),
 													'published_at' => $video->snippet->publishedAt 
 												);
 
@@ -225,7 +229,11 @@ class AdminController extends BaseController {
 											'position' => $video_index,
 											'title' => $video['title'],
 											'description' => strip_tags($video['description']),
-											'thumbnail' => $video['thumbnail_small'],
+											'thumbnails' => array(
+												'small' => $video['thumbnail_small'],
+												'medium' => $video['thumbnail_medium'],
+												'large' => $video['thumbnail_large']
+											),
 											'published_at' => date('Y-m-d', strtotime($video['upload_date'])) 
 										);
 
@@ -269,7 +277,11 @@ class AdminController extends BaseController {
 										'position' => $video_index,
 										'title' => $video['title'],
 										'description' => strip_tags($video['description']),
-										'thumbnail' => $video['thumbnail_small'],
+										'thumbnails' => array(
+											'small' => $video['thumbnail_small'],
+											'medium' => $video['thumbnail_medium'],
+											'large' => $video['thumbnail_large']			
+										),
 										'published_at' => date('Y-m-d', strtotime($video['upload_date'])) 
 									);
 
