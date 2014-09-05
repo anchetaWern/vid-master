@@ -9,7 +9,8 @@
 		"vimeo/vimeo-api": "dev-master",
 		"pda/pheanstalk": "2.0.*",
 		"nesbot/Carbon": "*",
-		"shift31/laravel-elasticsearch": "1.0.*@dev"
+		"shift31/laravel-elasticsearch": "1.0.*@dev",
+		"guzzlehttp/guzzle": "4.*"
 	},
 	"autoload": {
 		"classmap": [

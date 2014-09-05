@@ -268,6 +268,109 @@ Route::get('/vimeo', function(){
 
 	$username = 'fronttrends';
 	$client = new GuzzleHttp\Client();
-	$res = $client->get("http://vimeo.com/api/v2/{$username}/info.json");
-	return $res->getBody(); 
+	$res = $client->get("http://vimeo.com/api/v2/{$username}/channels.json");
+	$data = json_decode($res->getBody(), true); 
+	print_r($data);
+});
+
+
+Route::get('/vimeo/redirect', function(){
+
+	$app_id = '1149255775453ab09e7d68c379d5feafa2486191';
+	$app_secret = '360648f00a1e386b02511a7b985c509285adb343';
+
+	$vimeo = new Vimeo\Vimeo($app_id, $app_secret);
+	$redirect_url = 'http://localhost:7778/vimeo/connect';
+	$connect_url = $vimeo->buildAuthorizationEndpoint($redirect_url);
+	return Redirect::to($connect_url);
+});
+
+Route::get('/vimeo/connect', function(){
+	return Input::get();
+	// vimeo access token:
+	// 9f58506a9862177aea600ea3700fdb2519129a40
+});
+
+Route::get('/vimeo/advanced', function(){
+
+	$app_id = '1149255775453ab09e7d68c379d5feafa2486191';
+	$app_secret = '360648f00a1e386b02511a7b985c509285adb343';
+
+	$access_token = '9f58506a9862177aea600ea3700fdb2519129a40';
+
+	$vimeo = new Vimeo\Vimeo($app_id, $app_secret);
+	$vimeo->setToken($access_token);
+
+	$vimeo->request('/me/videos', array('type' => 'POST', 'redirect_url' => $redirect_target), 'POST');
+});
+
+Route::get('/get/vimeo', function(){
+
+	$videosearch_params = array(
+			'index' => 'video-websites',
+			'type' => 'video'
+		);
+
+	$videosearch_params['body']['query']['filtered']['query']['match']['website_id'] = 4;
+	$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['user_id'] = 1;
+
+
+	$videosearch_response = Es::search($videosearch_params);
+	return $videosearch_response;
+});
+
+Route::get('/vimeo/cache', function(){
+
+	$user_id = 1;
+	$video_page = 2;
+	$website_id = 4;
+	$channel_id = 4;
+
+	$video_index = 21;
+
+	$account_id = 'sayanee';
+
+	$client = new GuzzleHttp\Client();
+
+	do{
+		$allvideos_response = $client->get("http://vimeo.com/api/v2/{$account_id}/all_videos.json?page={$video_page}");
+		$videos = json_decode($allvideos_response->getBody(), true);
+		if(!empty($videos)){
+
+
+			foreach($videos as $video){
+
+				if($video['embed_privacy'] == 'anywhere'){
+					$video_id = $video['id'];
+
+					$video_params['body']  = array(
+						'id' => $video_id,
+						'video_id' => $video_id,
+						'user_id' => $user_id,
+						'website_id' => $website_id,
+						'channel_id' => $channel_id,
+						'video_type' => 'vimeo',
+						'position' => $video_index,
+						'title' => $video['title'],
+						'description' => strip_tags($video['description']),
+						'thumbnail' => $video['thumbnail_small'],
+						'published_at' => date('Y-m-d', strtotime($video['upload_date'])) 
+					);
+
+					$video_params['index'] = 'video-websites';
+					$video_params['type']  = 'video';
+					$video_params['id']    = $video_id;
+					$ret = Es::index($video_params);	
+					print_r($ret);
+				}
+
+				$video_index += 1;
+
+			}
+		
+		}
+
+		$video_page += 1;
+	}while(!empty($videos) && $video_page <= 3);
+
 });

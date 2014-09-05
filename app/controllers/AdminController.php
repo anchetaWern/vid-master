@@ -35,6 +35,8 @@ class AdminController extends BaseController {
 						->withInput();
 		}else{
 
+			$client = new GuzzleHttp\Client();
+
 			$title = Input::get('title');
 			$tagline = Input::get('tagline');
 			$about = Input::get('about');
@@ -58,97 +60,237 @@ class AdminController extends BaseController {
 			$website->save();
 			$website_id = $website->id;
 
+			if($type == 'youtube'){			
+				$youtube = new Youtube(array('key' => Config::get('keys.youtube')));
+				$youtube_channel = $youtube->getChannelByName($account_id);
 
-			$youtube = new Youtube(array('key' => Config::get('keys.youtube')));
-			$youtube_channel = $youtube->getChannelByName($account_id);
+				$site_channel_id = $youtube_channel->id;
+				$site_channel_title = $youtube_channel->snippet->title;
+				$site_channel_description = $youtube_channel->snippet->description;
+				$site_channel_thumbnail = $youtube_channel->snippet->thumbnails->high->url;
+			}else if($type == 'vimeo'){
+
+				$vimeo = $client->get("http://vimeo.com/api/v2/{$account_id}/info.json");
+				$vimeo_channel = json_decode($vimeo->getBody(), true); 
+
+				$site_channel_id = $vimeo_channel['id'];
+				$site_channel_title = $vimeo_channel['display_name'];
+				$site_channel_description = strip_tags($vimeo_channel['bio']);
+				$site_channel_thumbnail = $vimeo_channel['portrait_huge'];
+
+			}
 
 			$channel = new Channel;
 			$channel->user_id = $user_id;
 			$channel->website_id = $website_id;
-			$channel->channel_id = $youtube_channel->id;
-			$channel->title = $youtube_channel->snippet->title;
-			$channel->description = $youtube_channel->snippet->description;
-			$channel->thumbnail = $youtube_channel->snippet->thumbnails->high->url;
+			$channel->channel_id = $site_channel_id;
+			$channel->title = $site_channel_title;
+			$channel->description = $site_channel_description;
+			$channel->thumbnail = $site_channel_thumbnail;
 			$channel->save();
 			$channel_id = $channel->id;
 
 
 			$next_playlisttoken = '';
 
-			do{
 
-				$playlists = $youtube->getPlaylistsByChannelId($youtube_channel->id, array('maxResults' => 50, 'pageToken' => $next_playlisttoken));
-				$next_playlisttoken = $youtube->page_info;
+			if($type == 'youtube'){
 
-				if(!empty($playlists)){			
-					foreach($playlists as $pl){
+				do{
 
-						//only cached playlists that are public
-						if($pl->status->privacyStatus == 'public'){					
-							$playlist_id = $pl->id;
+					$playlists = $youtube->getPlaylistsByChannelId($youtube_channel->id, array('maxResults' => 50, 'pageToken' => $next_playlisttoken));
+					$next_playlisttoken = $youtube->page_info;
 
-							$playlist_params['body']  = array(
-								'id' => $playlist_id,
-								'user_id' => $user_id,
-								'website_id' => $website_id,
-								'channel_id' => $channel_id,
-								'title' => $pl->snippet->title,
-								'description' => $pl->snippet->description,
-								'thumbnail' => $pl->snippet->thumbnails->high->url,
-								'published_at' => $pl->snippet->publishedAt
-							);
-							$playlist_params['index'] = 'video-websites';
-							$playlist_params['type']  = 'playlist';
-							$playlist_params['id']    = $playlist_id;
-							$ret = Es::index($playlist_params);	
+					if(!empty($playlists)){			
+						foreach($playlists as $pl){
 
-							$next_videostoken = '';
+							//only cached playlists that are public
+							if($pl->status->privacyStatus == 'public'){					
+								$playlist_id = $pl->id;
 
-							do{
-								$playlist_items = $youtube->getPlaylistItemsByPlaylistId(
-									$playlist_id, array('maxResults' => 50, 'pageToken' => $next_videostoken)
+								$playlist_params['body']  = array(
+									'id' => $playlist_id,
+									'user_id' => $user_id,
+									'website_id' => $website_id,
+									'channel_id' => $channel_id,
+									'title' => $pl->snippet->title,
+									'playlist_type' => 'youtube',
+									'description' => $pl->snippet->description,
+									'thumbnail' => $pl->snippet->thumbnails->default->url,
+									'published_at' => $pl->snippet->publishedAt
 								);
-								$next_videostoken = $youtube->page_info;
+								$playlist_params['index'] = 'video-websites';
+								$playlist_params['type']  = 'playlist';
+								$playlist_params['id']    = $playlist_id;
+								$ret = Es::index($playlist_params);	
 
-								if(!empty($playlist_items)){
-									foreach($playlist_items as $video){
+								$next_videostoken = '';
 
-										if($video->status->privacyStatus == 'public'){
-											$video_id = $video->id;
+								do{
+									$playlist_items = $youtube->getPlaylistItemsByPlaylistId(
+										$playlist_id, array('maxResults' => 50, 'pageToken' => $next_videostoken)
+									);
+									$next_videostoken = $youtube->page_info;
 
-											$video_params['body']  = array(
-												'id' => $video_id,
-												'video_id' => $video->contentDetails->videoId,
-												'user_id' => $user_id,
-												'website_id' => $website_id,
-												'channel_id' => $channel_id,
-												'playlist_id' => $playlist_id,
-												'position' => $video->snippet->position,
-												'title' => $video->snippet->title,
-												'description' => $video->snippet->description,
-												'thumbnail' => $video->snippet->thumbnails->high->url,
-												'published_at' => $video->snippet->publishedAt 
-											);
+									if(!empty($playlist_items)){
+										foreach($playlist_items as $video){
 
-											$video_params['index'] = 'video-websites';
-											$video_params['type']  = 'video';
-											$video_params['id']    = $video_id;
-											$ret = Es::index($video_params);	
+											if($video->status->privacyStatus == 'public'){
+												$video_id = $video->id;
+
+												$video_params['body']  = array(
+													'id' => $video_id,
+													'video_id' => $video->contentDetails->videoId,
+													'user_id' => $user_id,
+													'website_id' => $website_id,
+													'channel_id' => $channel_id,
+													'playlist_id' => $playlist_id,
+													'video_type' => 'youtube',
+													'position' => $video->snippet->position,
+													'title' => $video->snippet->title,
+													'description' => $video->snippet->description,
+													'thumbnail' => $video->snippet->thumbnails->default->url,
+													'published_at' => $video->snippet->publishedAt 
+												);
+
+												$video_params['index'] = 'video-websites';
+												$video_params['type']  = 'video';
+												$video_params['id']    = $video_id;
+												$ret = Es::index($video_params);	
+											}
+
 										}
-
 									}
-								}
-							
-							}while(is_string($next_videostoken));
+								
+								}while(is_string($next_videostoken));
 
 
+							}
 						}
 					}
-				}
 
-				
+					
 
-			}while(is_string($next_playlisttoken));
+				}while(is_string($next_playlisttoken));
+			}else if($type == 'vimeo'){
+
+				$playlists_response = $client->get("http://vimeo.com/api/v2/{$account_id}/channels.json");
+				$playlists = json_decode($playlists_response->getBody(), true); 
+
+				if(!empty($playlists)){
+					foreach($playlists as $pl){
+
+						$playlist_id = $pl['id'];
+
+						$playlist_params['body']  = array(
+							'id' => $playlist_id,
+							'user_id' => $user_id,
+							'website_id' => $website_id,
+							'channel_id' => $channel_id,
+							'title' => $pl['name'],
+							'playlist_type' => 'vimeo',
+							'description' => $pl['description'],
+							'thumbnail' => $pl['logo'],
+							'published_at' => $pl['created_on']
+						);
+
+						$playlist_params['index'] = 'video-websites';
+						$playlist_params['type']  = 'playlist';
+						$playlist_params['id']    = $playlist_id;
+						$ret = Es::index($playlist_params);	
+
+						$video_page = 1;
+						$video_index = 0;
+
+						do{
+							$videos_response = $client->get("http://vimeo.com/api/v2/{$playlist_id}/videos.json?page={$video_page}");
+							$videos = json_decode($videos_response->getBody(), true);
+
+							if(!empty($videos)){
+
+
+								foreach($videos as $video){
+
+									if($video['embed_privacy'] == 'anywhere'){
+										$video_id = $video['id'];
+
+										$video_params['body']  = array(
+											'id' => $video_id,
+											'video_id' => $video_id,
+											'user_id' => $user_id,
+											'website_id' => $website_id,
+											'channel_id' => $channel_id,
+											'playlist_id' => $playlist_id,
+											'video_type' => 'vimeo',
+											'position' => $video_index,
+											'title' => $video['title'],
+											'description' => strip_tags($video['description']),
+											'thumbnail' => $video['thumbnail_small'],
+											'published_at' => date('Y-m-d', strtotime($video['upload_date'])) 
+										);
+
+										$video_params['index'] = 'video-websites';
+										$video_params['type']  = 'video';
+										$video_params['id']    = $video_id;
+										$ret = Es::index($video_params);	
+									}
+
+									$video_index += 1;
+								}
+							}
+
+							$video_page += 1;
+						}while(!empty($videos) && $video_page <= 3);
+
+					}
+				}else{
+
+					$video_page = 1;
+					$video_index = 0;
+					
+					do{
+						$allvideos_response = $client->get("http://vimeo.com/api/v2/{$account_id}/all_videos.json?page={$video_page}");
+						$videos = json_decode($allvideos_response->getBody(), true);
+						if(!empty($videos)){
+
+
+							foreach($videos as $video){
+
+								if($video['embed_privacy'] == 'anywhere'){
+									$video_id = $video['id'];
+
+									$video_params['body']  = array(
+										'id' => $video_id,
+										'video_id' => $video_id,
+										'user_id' => $user_id,
+										'website_id' => $website_id,
+										'channel_id' => $channel_id,
+										'video_type' => 'vimeo',
+										'position' => $video_index,
+										'title' => $video['title'],
+										'description' => strip_tags($video['description']),
+										'thumbnail' => $video['thumbnail_small'],
+										'published_at' => date('Y-m-d', strtotime($video['upload_date'])) 
+									);
+
+									$video_params['index'] = 'video-websites';
+									$video_params['type']  = 'video';
+									$video_params['id']    = $video_id;
+									$ret = Es::index($video_params);	
+								}
+
+								$video_index += 1;
+
+							}
+						
+						}
+
+						$video_page += 1;
+					}while(!empty($videos) && $video_page <= 3);
+				}		
+
+			}
+			
 			
 
 			return Redirect::to('/websites/new')

@@ -8,4 +8,6 @@ $baseDir = dirname($vendorDir);
 return array(
     'Vimeo\\' => array($vendorDir . '/vimeo/vimeo-api/src/Vimeo'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
+    'GuzzleHttp\\Stream\\' => array($vendorDir . '/guzzlehttp/streams/src'),
+    'GuzzleHttp\\' => array($vendorDir . '/guzzlehttp/guzzle/src'),
 );
