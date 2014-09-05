@@ -88,6 +88,7 @@ class HomeController extends BaseController {
 	public function playlistVideos(){
 
 		$id = Input::get('id');
+		$website_id = Input::get('website_id');
 		$from = Input::get('from');
 	
 		$videosearch_params = array(
@@ -95,7 +96,11 @@ class HomeController extends BaseController {
 			'type' => 'video'
 		);
 
-		$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = $id;
+
+		if(!empty($id)){
+			$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = $id;
+		}
+		$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['website_id'] = $website_id;
 		$videosearch_params['body']['sort']['position']['order'] = 'asc';
 		$videosearch_params['from'] = $from;
 

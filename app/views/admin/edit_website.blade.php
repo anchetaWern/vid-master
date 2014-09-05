@@ -118,7 +118,7 @@
 		  	<div class="tab-item">	  		
 			  	@foreach($playlists['hits']['hits'] as $item)
 			  	<div class="pl-container">
-			  		<img src="{{ $item['_source']['thumbnail'] }}" alt="{{ $item['_source']['title'] }}" data-id="{{ $item['_source']['id'] }}" class="pl-image">
+			  		<img src="{{ $item['_source']['thumbnail'] }}" alt="{{ $item['_source']['title'] }}" data-websiteid="{{ $website->id }}" data-id="{{ $item['_source']['id'] }}" class="pl-image">
 			  		<h5 class="pl-title">{{ $item['_source']['title'] }}</h5>
 			  		<div class="pl-description">
 			  			{{ substr($item['_source']['description'], 0, 200) }}...
@@ -126,7 +126,7 @@
 			  	</div>
 			  	@endforeach
 
-			  	@if($playlists['hits']['total'] > $playlist_count)
+			  	@if(!empty($playlists) && $playlists['hits']['total'] > $playlist_count)
 			  	<div class="load-more-container">
 			  		<a href="#" class="load-more">load more</a>
 			  	</div>
@@ -136,12 +136,31 @@
 		  
 		  <div class="tab-pane" id="videos">
 		  	<div class="tab-item">
-
+		  		@if(!empty($videos['hits']))
+					@foreach($videos['hits']['hits'] as $item)
+					<div class="pl-container">
+						<img src="{{ $item['_source']['thumbnail'] }}" alt="{{ $item['_source']['title'] }}" class="pl-image">
+						<h5 class="pl-title">{{ $item['_source']['title'] }}</h5>
+						<div class="actions-container">
+						<?php
+						$playlist_id = (!empty($item['_source']['playlist_id'])) ? $item['_source']['playlist_id'] : '';
+						$featured = (!empty($item['_source']['featured'])) ? $item['_source']['featured'] : '';
+						?>
+						<a class="action-link {{ $featured }}" data-featured="{{ $featured }}" data-id="{{ $item['_id'] }}" data-playlistid="{{ $playlist_id }}" data-type="featured" title="set as featured"><i class="fa fa-star-o"></i></a>
+						</div>
+						<div class="pl-description">
+							{{ substr($item['_source']['description'], 0, 200) }}...
+						</div>
+					</div>	
+					@endforeach
+				@endif
 		  	</div>
-
+		  	
+	
 			<div class="load-more-container">
-				<a href="#" class="load-more" data-playlistid="" data-from="">load more</a>
+				<a href="#" class="load-more" data-websiteid="{{ $website->id }}" data-playlistid="" data-from="0">load more</a>
 			</div>
+
 
 		  </div>
 		</div>

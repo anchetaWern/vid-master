@@ -1,11 +1,12 @@
 var videos_template = Handlebars.compile($('#videos-template').html());
 
-function loadPlaylistItems(id, from){
+function loadPlaylistItems(id, from, website_id){
 
 	$.post(
 		'/playlist/videos',
 		{
 			'from': from,
+			'website_id': website_id,
 			'id': id
 		},
 		function(response){
@@ -49,16 +50,22 @@ Handlebars.registerHelper('limit_output', function(description, limit){
   return description.substr(0, limit);
 });
 
+var playlist_id = $('.load-more-container .load-more').data('playlistid');
+if(!playlist_id){
+	$('.load-more-container').show();
+}
+
 
 $('.pl-image').click(function(){
 	var self = $(this);
 	$('.pl-image').removeClass('selected');
 	self.addClass('selected');
 
-	var id = self.data('id'); 
+	var id = self.data('id');
+	var website_id = self.data('websiteid'); 
 	var from = 0;
 	
-	loadPlaylistItems(id, from);
+	loadPlaylistItems(id, from, website_id);
 });
 
 $('#videos').on('click', '.load-more', function(e){
@@ -67,9 +74,10 @@ $('#videos').on('click', '.load-more', function(e){
 
 	var self = $(this);
 	var id = self.data('playlistid');
+	var website_id = self.data('websiteid');
 	var from = self.data('from') + 10;
 
-	loadPlaylistItems(id, from);
+	loadPlaylistItems(id, from, website_id);
 });
 
 
@@ -82,6 +90,7 @@ $('#videos').on('click', '.action-link', function(e){
 	
 	var id = self.data('id');
 	var playlist_id = self.data('playlistid');
+	var website_id = self.data('websiteid');
 	var status = self.data('featured');
 	$('#videos .action-link.featured').removeClass('featured').data('featured', '');
 
@@ -91,6 +100,7 @@ $('#videos').on('click', '.action-link', function(e){
 		'/video/featured',
 		{
 			'id': id,
+			'website_id': website_id,
 			'playlist_id': playlist_id,
 			'status': status
 		},

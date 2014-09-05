@@ -334,10 +334,32 @@ class AdminController extends BaseController {
 
 		$playlists = (!empty($playlistsearch_response['hits']['hits'])) ? $playlistsearch_response['hits']['hits'] : array(); 
 
+		
+		$video_count = 0;
+		$videosearch_response = array();
+
+
+		if(empty($playlists)){
+
+			$videosearch_params = array(
+				'index' => 'video-websites',
+				'type' => 'video'
+			);
+
+			$videosearch_params['body']['query']['filtered']['query']['match']['website_id'] = $id;
+			$videosearch_response['body']['sort']['published_at']['order'] = 'desc';
+			$videosearch_response = Es::search($videosearch_params);
+
+			$videos = (!empty($videosearch_response['hits']['hits'])) ? $videosearch_response['hits']['hits'] : array(); 			
+			$video_count = count($videos);
+		}
+
 		$page_data = array(
 			'website' => $website,
 			'playlists' => $playlistsearch_response,
-			'playlist_count' => count($playlists)
+			'playlist_count' => count($playlists),
+			'videos' => $videosearch_response,
+			'video_count' => $video_count
 		);
 
 		$this->layout->title = 'Edit Website';
@@ -399,6 +421,7 @@ class AdminController extends BaseController {
 	public function setFeaturedVideo(){
 
 		$id = Input::get('id');
+		$website_id = Input::get('website_id');
 		$playlist_id = Input::get('playlist_id');
 		$status = Input::get('status');
 
@@ -415,8 +438,12 @@ class AdminController extends BaseController {
 				'type' => 'video'
 			);
 
-		$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = $playlist_id;
+		if(!empty($playlist_id)){
+			$videosearch_params['body']['query']['filtered']['query']['match']['playlist_id'] = $playlist_id;
+		}
+
 		$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['user_id'] = $user_id;
+		$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['website_id'] = $website_id;
 		$videosearch_params['body']['query']['filtered']['filter']['bool']['must'][]['term']['featured'] = 'featured';
 
 		$videosearch_response = Es::search($videosearch_params);
